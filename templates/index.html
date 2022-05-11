@@ -19,9 +19,8 @@
         <link href="https://fonts.googleapis.com/css?family=Do+Hyeon&display=swap" rel="stylesheet">
         <script type="text/javascript">
             $(document).ready(function () {
-                $("#reviews-box").html("");
-                showReview();
             });
+
             function makeReview() {
                 $.ajax({
                     type: "POST",
@@ -34,12 +33,31 @@
                 })
             }
             function showReview() {
+                // 서버에 리뷰 데이터 요청하기
+                $("#result-box").html("");
+
                 $.ajax({
                     type: "GET",
-                    url: "/review?sample_give=샘플데이터",
+                    url: "/result",
                     data: {},
                     success: function (response) {
-                        alert(response["msg"]);
+                        let results = response['results'];
+                        // 읽어온 리뷰 데이터를 테이블(#reviews-box)에 추가하기
+                        for (let i=0; i<results.length; i++){
+                            let ticker = $('#ticker').val()
+                            let ror = results[i]['ROR']
+                            let mdd = results[i]['MDD']
+                            
+                            let temp_html =
+                                `
+                                <tr>
+                                  <td>${ticker}</td>
+                                  <td>${ror}</td>
+                                  <td>${mdd}</td>
+                                </tr>
+                                `
+                            $('#result-box').append(temp_html)
+                        }
                     }
                 })
             }
@@ -66,50 +84,49 @@
     </head>
     <body>
         <div class="container">
-            <div class="reviews">
+            <div class="info">
+                <h1>백테스팅 테스트</h1>
+                <p>전략별 누적수익률을 백테스팅 해본다.</p>
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <label class="input-group-text" for="inputGroupSelect01">Choose Strategy</label>
+                    </div>
+                    <select class="custom-select" id="strategy">
+                        <option selected>Choose...</option>
+                        <option value="1">Volatility Breakout</option>
+                        <option value="2">MFI Divergence</option>
+                    </select>
+                </div>
+                  
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Ticker</span>
+                    </div>
+                    <input type="text" class="form-control" id="ticker" placeholder="ETH/USDT, BTC/USDT ...">
+                </div>
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">k</span>
+                    </div>
+                    <input type="text" class="form-control" id="k" placeholder="0~1 사이 입력">
+                </div>
+                <div class="review">
+                    <button onclick="showReview()" type="button" class="btn btn-primary">결과 조회하기</button>
+                </div>
+            </div>
+
+            <div class="result">
                 <table class="table">
                     <thead>
                     <tr>
-                        <th scope="col">제목</th>
-                        <th scope="col">저자</th>
-                        <th scope="col">리뷰</th>
+                        <th scope="col">Ticker</th>
+                        <th scope="col">누적수익율</th>
+                        <th scope="col">MDD</th>
                     </tr>
                     </thead>
-                    <tbody id="reviews-box">
-                    <tr>
-                        <td>왕초보 8주 코딩</td>
-                        <td>김르탄</td>
-                        <td>역시 왕초보 코딩교육의 명가답군요. 따라하다보니 눈 깜짝할 사이에 8주가 지났습니다.</td>
-                    </tr>
+                    <tbody id="result-box">
                     </tbody>
                 </table>
-            </div>
-            <div class="info">
-                <h1>읽은 책에 대해 말씀해주세요.</h1>
-                <p>다른 사람을 위해 리뷰를 남겨주세요! 다 같이 좋은 책을 읽는다면 다 함께 행복해질 수 있지 않을까요?</p>
-                <div class="input-group mb-3">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text">제목</span>
-                    </div>
-                    <input type="text" class="form-control" id="title">
-                </div>
-                <div class="input-group mb-3">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text">저자</span>
-                    </div>
-                    <input type="text" class="form-control" id="author">
-                </div>
-                <div class="input-group mb-3">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text">리뷰</span>
-                    </div>
-                    <textarea class="form-control" id="bookReview"
-                              cols="30"
-                              rows="5" placeholder="140자까지 입력할 수 있습니다."></textarea>
-                </div>
-                <div class="review">
-                    <button onclick="makeReview()" type="button" class="btn btn-primary">리뷰 작성하기</button>
-                </div>
             </div>
         </div>
     </body>

@@ -20,52 +20,63 @@ def write_review():
     print(sample_receive)
     return jsonify({'msg': '이 요청은 POST!'})
 
-@app.route('/review', methods=['GET'])
+@app.route('/result', methods=['GET'])
 def read_reviews():
-    sample_receive = request.args.get('sample_give')
-    print(sample_receive)
+    strg = request.args.get('strategy')
+    k = request.args.get('k')
+    ticker = request.args.get('ticker') 
 
-    df = get_binance_backtest_data()
+    print(strg)
 
-    return jsonify({'msg': '이 요청은 GET!'})
+    # 바이낸스 접속 불가..
+    #backtest_result = get_binance_backtest_data(strg, k, ticker)
+    backtest_result = {'ROR': 1.102132, 'MDD' : 36}
 
-def get_binance_backtest_data(strg):
-    ohlcvs = binance.fetch_ohlcv('ETH/BTC', '1d')
+    result_list = []
+    result_list.append(backtest_result)
+
+    return jsonify({'results': result_list})
+
+
+def get_binance_backtest_data(strg, k, ticker):
+    ohlcvs = binance.fetch_ohlcv(ticker, '1d')
     df = pd.DataFrame(ohlcvs, columns=['datetime', 'open', 'high', 'low', 'close', 'volume'])
     df['datetime'] = pd.to_datetime(df['datetime'], unit='ms')
     df.set_index('datetime', inplace=True)
 
-    df = get_binance_target_price(strg, df)
-    df = get_binance_ror(df)
+    df = get_binance_target_price(strg, df, k)
+    df = get_binance_ror_hpr_dd(df)
 
     # 누적수익률
     ror = df['ror'].cumprod()[-2]
+    mdd = df['dd'].max()
+
+    result = {'ROR': ror, 'MDD' : mdd}
     
     # Save Backtesting Result to file
     df.to_excel('eth.xlsx')
-    return ror
+    return result
 
-def get_binance_target_price(strg, df):
+def get_binance_target_price(strg, df, k=0.5):
     if strg == 'volatility-breakout':
-        df = get_binance_target_price_volatility_breakout(df)
+        df = get_binance_target_price_volatility_breakout(df, k)
 
     return df
 
-def get_binance_ror(df):
+def get_binance_ror_hpr_dd(df):
     df['ror'] = np.where(df['high'] > df['target'], 
                     df['close'] / df['target'],
                     1)
+    
+    df['hpr'] = df['ror'].cumprod()
+    df['dd'] = (df['hpr'].cummax() - df['hpr']) / df['hpr'].cummax() * 100
     return df
 
-def get_binance_target_price_volatility_breakout(df):
-    k = 0.5
+def get_binance_target_price_volatility_breakout(df, k):
     df['range'] = (df['high'] - df['low']) * k
     df['target'] = df['open'] + df['range'].shift(1)
     return df
     
-
-
-
 
 # render_template: template 파일 중 index.html을 불러 옴 
 if __name__ == '__main__':
