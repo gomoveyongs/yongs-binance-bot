@@ -29,8 +29,8 @@ def read_reviews():
     print(strg)
 
     # 바이낸스 접속 불가..
-    #backtest_result = get_binance_backtest_data(strg, k, ticker)
-    backtest_result = {'ROR': 1.102132, 'MDD' : 36}
+    backtest_result = get_binance_backtest_data(strg, k, ticker)
+    #backtest_result = {'ROR': 1.102132, 'MDD' : 36}
 
     result_list = []
     result_list.append(backtest_result)
@@ -54,11 +54,11 @@ def get_binance_backtest_data(strg, k, ticker):
     result = {'ROR': ror, 'MDD' : mdd}
     
     # Save Backtesting Result to file
-    df.to_excel('eth.xlsx')
+    #df.to_excel('eth.xlsx')
     return result
 
 def get_binance_target_price(strg, df, k=0.5):
-    if strg == 'volatility-breakout':
+    if strg == '1': #volatility-breakout
         df = get_binance_target_price_volatility_breakout(df, k)
 
     return df
@@ -73,7 +73,7 @@ def get_binance_ror_hpr_dd(df):
     return df
 
 def get_binance_target_price_volatility_breakout(df, k):
-    df['range'] = (df['high'] - df['low']) * k
+    df['range'] = (df['high'] - df['low']) * float(k)
     df['target'] = df['open'] + df['range'].shift(1)
     return df
     

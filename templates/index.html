@@ -39,7 +39,11 @@
                 $.ajax({
                     type: "GET",
                     url: "/result",
-                    data: {},
+                    data: {
+                        strategy: $('#strategy').val(),
+                        ticker: $('#ticker').val(),
+                        k: $('#k').val()
+                    },
                     success: function (response) {
                         let results = response['results'];
                         // 읽어온 리뷰 데이터를 테이블(#reviews-box)에 추가하기
