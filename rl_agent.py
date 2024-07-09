@@ -1,9 +1,9 @@
-import random
 import numpy as np
+import random
 from collections import deque
-from keras.api.models import Sequential
-from keras.api.layers import Dense
-from keras.api.optimizers import Adam
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.optimizers import Adam
 
 class DQNAgent:
     def __init__(self, state_size, action_size):
@@ -20,9 +20,9 @@ class DQNAgent:
     def _build_model(self):
         model = Sequential()
         model.add(Dense(24, input_dim=self.state_size, activation='relu'))
-        model.add(Dense(24, activation='relu'))
+        model.add(Dense(24, activation='relu'))  # 줄이기
         model.add(Dense(self.action_size, activation='linear'))
-        model.compile(loss='mse', optimizer=Adam(learning_rate=self.learning_rate))
+        model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate))
         return model
 
     def remember(self, state, action, reward, next_state, done):
@@ -42,7 +42,7 @@ class DQNAgent:
                 target = (reward + self.gamma * np.amax(self.model.predict(next_state)[0]))
             target_f = self.model.predict(state)
             target_f[0][action] = target
-            self.model.fit(state, target_f, epochs=1, verbose=0)
+            self.model.fit(state, target_f, epochs=1, verbose=0)  # verbose를 0으로 설정
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
 

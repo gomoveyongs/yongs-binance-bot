@@ -6,14 +6,14 @@ from rl_agent import DQNAgent
 from rl_utils import preprocess_data, plot_trading_results
 
 # Load and preprocess data
-data = pd.read_csv('my_eth_data_bi.csv')
+data = pd.read_csv('your_data.csv')
 data = preprocess_data(data)
 
 # Define hyperparameters
 state_size = 10
 action_size = 3  # [0: hold, 1: long, 2: short]
-episodes = 5
-batch_size = 64
+episodes = 300  # Reduced number of episodes
+batch_size = 128  # Increased batch size
 
 # Initialize environment and agent
 env = TradingEnvironment(data)
@@ -42,3 +42,17 @@ agent.save("dqn_model.h5")
 
 # Plot the results
 plot_trading_results(env)
+
+# Predict action for a given state
+def predict_action(agent, state):
+    state = np.reshape(state, [1, state_size])
+    action = agent.act(state)
+    actions = ['hold', 'long', 'short']
+    return actions[action]
+
+# Example input (Open, High, Low, Close, Volume, RSI, MFI, Ichimoku, Prev_Close, MACD)
+example_input = np.array([1.0, 1.1, 0.9, 1.05, 1000, 50, 50, 1.03, 1.00, 0.02])
+example_input_normalized = preprocess_data(pd.DataFrame([example_input], columns=['Open', 'High', 'Low', 'Close', 'Volume', 'RSI', 'MFI', 'Ichimoku', 'Prev_Close', 'MACD']))
+
+predicted_action = predict_action(agent, example_input_normalized.values[0])
+print(f"Predicted action for the given state: {predicted_action}")
