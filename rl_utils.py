@@ -51,10 +51,10 @@ def plot_trading_results(env):
 
     plt.title('Trading Positions')
     plt.legend()
-    plt.show()
+    plt.savefig('Trading_Positions.png')
 
     cumulative_rewards = np.cumsum([reward for _, reward in env.positions])
     plt.figure(figsize=(12, 6))
     plt.plot(cumulative_rewards)
     plt.title('Cumulative Reward')
-    plt.show()
+    plt.savefig('Cumulative_Reward.png')
