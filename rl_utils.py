@@ -1,40 +1,39 @@
-import pandas as pd
 import numpy as np
-from sklearn.preprocessing import MinMaxScaler
+import pandas as pd
 import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
 
 def preprocess_data(data):
-    data['RSI'] = compute_rsi(data['Close'])
-    data['MFI'] = compute_mfi(data)
+    scaler = StandardScaler()
+    data['RSI'] = compute_RSI(data['Close'])
+    data['MFI'] = compute_MFI(data)
     data['Ichimoku'] = data['Close'].shift(-26)
-    data['Prev_Close'] = data['Close'].shift(26)
-    data['MACD'] = compute_macd(data['Close'])
-
+    data['Close_26'] = data['Close'].shift(26)
+    data['MACD'] = compute_MACD(data['Close'])
     data = data.dropna()
-    scaler = MinMaxScaler()
-    data[data.columns] = scaler.fit_transform(data[data.columns])
-    return data
+    normalized_data = scaler.fit_transform(data[['Open', 'High', 'Low', 'Close', 'Volume', 'RSI', 'MFI', 'Ichimoku', 'Close_26', 'MACD']])
+    return normalized_data
 
-def compute_rsi(series, period=14):
-    delta = series.diff(1)
+def compute_RSI(series, period=14):
+    delta = series.diff()
     gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
     loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
-    rs = gain / loss
-    return 100 - (100 / (1 + rs))
+    RS = gain / loss
+    return 100 - (100 / (1 + RS))
 
-def compute_mfi(data, period=14):
+def compute_MFI(data, period=14):
     typical_price = (data['High'] + data['Low'] + data['Close']) / 3
     money_flow = typical_price * data['Volume']
-    positive_flow = money_flow.where(typical_price > typical_price.shift(1), 0).rolling(window=period).sum()
-    negative_flow = money_flow.where(typical_price < typical_price.shift(1), 0).rolling(window=period).sum()
-    mfi = 100 - (100 / (1 + (positive_flow / negative_flow)))
-    return mfi
+    positive_flow = (money_flow.where(typical_price > typical_price.shift(1), 0)).rolling(window=period).sum()
+    negative_flow = (money_flow.where(typical_price < typical_price.shift(1), 0)).rolling(window=period).sum()
+    MFI = 100 - (100 / (1 + (positive_flow / negative_flow)))
+    return MFI
 
-def compute_macd(series, short_period=12, long_period=26, signal_period=9):
-    short_ema = series.ewm(span=short_period, adjust=False).mean()
-    long_ema = series.ewm(span=long_period, adjust=False).mean()
-    macd = short_ema - long_ema
-    signal = macd.ewm(span=signal_period, adjust=False).mean()
+def compute_MACD(series, slow=26, fast=12, signal=9):
+    fast_ema = series.ewm(span=fast, adjust=False).mean()
+    slow_ema = series.ewm(span=slow, adjust=False).mean()
+    macd = fast_ema - slow_ema
+    signal = macd.ewm(span=signal, adjust=False).mean()
     return macd - signal
 
 def plot_trading_results(env):
@@ -52,10 +51,10 @@ def plot_trading_results(env):
 
     plt.title('Trading Positions')
     plt.legend()
-    plt.savefig('trading_positions.png')
+    plt.show()
 
     cumulative_rewards = np.cumsum([reward for _, reward in env.positions])
     plt.figure(figsize=(12, 6))
     plt.plot(cumulative_rewards)
     plt.title('Cumulative Reward')
-    plt.savefig('cmulative_reward.png')
+    plt.show()
